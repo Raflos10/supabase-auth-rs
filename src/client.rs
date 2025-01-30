@@ -502,6 +502,36 @@ impl AuthClient {
         }
     }
 
+    pub fn get_oauth_url(
+        &self,
+        provider: Provider,
+        options: Option<LoginWithOAuthOptions>,
+    ) -> Result<Url, Box<dyn std::error::Error>> {
+        let query_params = options.as_ref().map_or_else(
+            || vec![("provider", provider.to_string())],
+            |o| {
+                let mut params = vec![("provider", provider.to_string())];
+
+                if let Some(ref redirect) = o.redirect_to {
+                    params.push(("email_redirect_to", redirect.to_string()));
+                }
+
+                if let Some(ref extra) = o.query_params {
+                    params.extend(extra.iter().map(|(k, v)| (k.as_str(), v.to_string())));
+                }
+
+                params
+            },
+        );
+
+        let result = Url::parse_with_params(
+            format!("{}{}/authorize", self.project_url, AUTH_V1).as_str(),
+            query_params,
+        )?;
+
+        Ok(result)
+    }
+
     /// Sign in a user using an OAuth provider.
     /// # Example
     /// ```
