@@ -554,7 +554,7 @@ impl AuthClient {
             .get(format!("{}{}/authorize", self.project_url, AUTH_V1))
             .query(&query_params)
             .headers(headers)
-            .body(body)
+            // .body(body)
             .send()
             .await?;
 
