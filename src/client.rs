@@ -224,19 +224,20 @@ impl AuthClient {
         let res_status = response.status();
         let res_body = response.text().await?;
 
-        if let Ok(session) = from_str::<Session>(&res_body) {
-            return Ok(EmailSignUpResult::SessionResult(session));
-        }
-
-        if let Ok(result) = from_str::<EmailSignUpConfirmation>(&res_body) {
-            return Ok(EmailSignUpResult::ConfirmationResult(result));
-        }
-
         if let Ok(error) = from_str::<SupabaseHTTPError>(&res_body) {
             return Err(Error::AuthError {
                 status: res_status,
                 message: error.message,
             });
+        }
+
+        if let Ok(session) = from_str::<Session>(&res_body) {
+            return Ok(EmailSignUpResult::SessionResult(session));
+        }
+
+        // TODO: this won't ever fail because EmailSignUpConfirmation only has optional properties
+        if let Ok(result) = from_str::<EmailSignUpConfirmation>(&res_body) {
+            return Ok(EmailSignUpResult::ConfirmationResult(result));
         }
 
         // Fallback: return raw error
